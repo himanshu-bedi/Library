@@ -1,0 +1,258 @@
+#include<iostream>
+#include<fstream>
+#include<string.h>
+
+using namespace std;
+class library
+{
+    int bookid;
+    char bookname[25];
+    char authorname[20];
+    int edition;
+    int issuedto;
+    char issuedon[10];
+public:
+    void accept()
+    {
+        cout<<"Enter book id"<<endl;
+        cin>>bookid;
+        cout<<"Enter book name"<<endl;
+        cin>>bookname;
+        cout<<"Author name"<<endl;
+        cin>>authorname;
+        cout<<"Enter edition"<<endl;
+        cin>>edition;
+        issuedto=0;
+        strcpy(issuedon," ");
+    }
+    void display()
+    {
+    int z= strlen(bookname);
+    for(int i=1;i<=20-z;i++)
+    {
+        strcat(bookname," ");
+    }
+    int k= strlen(authorname);
+    for(int j=1;j<=20-k;j++)
+    {
+        strcat(authorname," ");
+    }
+         cout<<bookid<<"\t"<<"\t";
+         cout<<bookname<<authorname<<edition<<"\t" <<"   " <<issuedto<<"\t" <<issuedon <<endl<<endl ;
+
+    }
+    friend void searchbook();
+    friend void removebook();
+    friend void issuebook();
+    friend void returnbook();
+
+};
+library obj;
+void addbook()
+{
+    fstream wr;
+    wr.open("e:\\library.txt",ios::app);
+    obj.accept();
+    wr.write((char*)&obj,sizeof(obj));
+    wr.close();
+    cout<<"Book has been added"<<endl<<"\n";
+
+
+}
+void readbook()
+{
+    fstream rd;
+    rd.open("e:\\library.txt",ios::in);
+    rd.seekg(0,ios::end);
+    int k=rd.tellg();
+         int diff=k/sizeof(obj);
+    rd.seekg(0,ios::beg);
+    for(int i=1;i<=diff;i++)
+    {
+     rd.read((char*)&obj,sizeof(obj));
+     if(i==1)
+     {
+         cout<<"BookID"<<"          "<<"Book Name"<<"           "<<"Author name"<<"         "<<"Edition"<<"       "<<"  "<<"issued on"<<endl;
+     }
+     obj.display();
+
+    }
+    cout<<endl<<endl;
+
+}
+void searchbook()
+{
+    char bname[25];
+    cout<<"Enter book to be searched"<<endl;
+    cin>>bname;
+    fstream rd;
+    rd.open("e:\\library.txt",ios::in);
+    rd.seekg(0,ios::end);
+    int k=rd.tellg();
+         int diff=k/sizeof(obj);
+    rd.seekg(0,ios::beg);
+    for(int i=1;i<=diff;i++)
+    {
+        rd.read((char*)&obj,sizeof(obj));
+        if(strcmp(obj.bookname,bname)==0)
+        {
+            obj.display();
+        }
+    }
+
+}
+void removebook()
+{
+    int bookID;
+    cout<<"Enter book code to be removed"<<endl;
+    cin>>bookID;
+    fstream rd;
+    fstream wr;
+    rd.open("e:\\library.txt",ios::in);
+    wr.open("e:\\temp.txt",ios::out);
+    rd.seekg(0,ios::end);
+  int l= rd.tellg();
+  rd.seekg(0,ios::beg);
+  int diff2= l/sizeof(obj);
+  for(int i=1;i<=diff2;i++)
+  {
+      rd.read((char*)&obj,sizeof(obj));
+      if(obj.bookid==bookID)
+      {
+          cout<<"Book has been removed"<<endl<<"\n";
+      }
+      else{
+        wr.write((char*)&obj,sizeof(obj));
+      }
+  }
+    rd.close();
+  wr.close();
+  remove("e:\\library.txt");   //// without closing renaming and removing will not take place
+  rename("e:\\temp.txt","e:\\library.txt");
+
+}
+void issuebook()
+{  int BID;
+cout<<"Enter book ID to issue"<<endl;
+cin>>BID;
+    fstream rd;
+    fstream wr;
+    wr.open("e:\\temp.txt",ios::out);
+    rd.open("e:\\library.txt",ios::in);
+    rd.seekg(0,ios::end);
+    int k= rd.tellg();
+    rd.seekg(0,ios::beg);
+    int size2=k/sizeof(obj);
+    for(int i=1;i<=size2;i++)
+    {
+        rd.read((char*)&obj,sizeof(obj));
+        if(obj.bookid==BID &&obj.issuedto!=0)
+        {
+              cout<<"Cannot issue book"<<endl;
+        }
+        else if(obj.bookid==BID)
+        {
+            char date[10];
+
+            cout<<"Enter date on which issued (DD/MM/YYYY)"<<endl;
+            cin>>date;
+            obj.issuedto = 1;
+            strcpy(obj.issuedon,date);
+            cout<<"Book has been issued"<<endl<<"\n";
+        }
+        wr.write((char*)&obj,sizeof(obj));
+    }
+    wr.close();
+    rd.close();
+    remove("e:\\library.txt");
+    rename("e:\\temp.txt","e:\\library.txt");
+}
+
+
+
+
+void returnbook()
+{
+    fstream wr;
+    fstream rd;
+    rd.open("e:\\library.txt",ios::in);
+    wr.open("e:\\temp.txt",ios::out);
+    rd.seekg(0,ios::end);
+    int n= rd.tellg();
+    rd.seekg(0,ios::beg);
+    int Diff= n/sizeof(obj);
+    int bid;
+    cout<<"Enter book id to return"<<endl;
+    cin>>bid;
+    for(int i=1;i<=Diff;i++)
+    {
+        rd.read((char *)&obj,sizeof(obj));
+        if(obj.issuedto!= 0)
+        {
+            strcpy(obj.issuedon," ");
+            obj.issuedto=0;
+            cout<<"Book returned"<<endl<<"\n";
+
+        }
+        wr.write((char*)&obj,sizeof(obj));
+
+    }
+    wr.close();
+    rd.close();
+    remove("e:\\library.txt");
+    rename("e:\\temp.txt","e:\\library.txt");
+}
+
+
+int main()
+{
+        cout<<endl<<"Enter 1 to Add New Book";
+        cout<<endl<<"Enter 2 to View All Books";
+        cout<<endl<<"Enter 3 to Search Books";
+        cout<<endl<<"Enter 4 to Issue Book";
+        cout<<endl<<"Enter 5 to Return Book";
+        cout<<endl<<"Enter 6 to Remove Book";
+        cout<<endl<<"Enter 7 to Exit"<<endl;
+while(1)
+{
+
+
+        int choice;
+        cout<<"Enter the corresponding choice"<<endl<<"\n";
+        cin>>choice;
+        if(choice==1)
+        {
+            addbook();
+        }
+        else if(choice==2)
+        {
+        readbook();
+        }
+        else if(choice==3)
+        {
+            searchbook();
+        }
+        else if(choice==4)
+        {
+            issuebook();
+        }
+        else if(choice==5)
+        {
+            returnbook();
+
+        }
+        else if(choice==6)
+        {
+
+            removebook();
+        }
+        else
+        {
+
+            break;
+        }
+}
+
+    return 0;
+}
+
